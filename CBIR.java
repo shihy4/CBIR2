@@ -59,6 +59,7 @@ public class CBIR extends JFrame {
     private static final int SPLASH_DURATION = 4000;
     private final static int INTENSITY_BIN_SIZE = 26;
     private final static int COLOR_CODE_BIN_SIZE = 64;
+    private final static int INT_CC_COLUMN_SIZE = 89;
     private final static int TOTAL_IMAGE = 101;
     private final Color FONT_COLOR = new Color(102,102,102);
     private final Color BUTTON_BACKGROUD = new Color(72, 62, 77);
@@ -70,6 +71,7 @@ public class CBIR extends JFrame {
     private final int[] imageSize; // keeps up with the image sizes
     private int[][] intensityMatrix;
     private int[][] colorCodeMatrix;
+    private double[][] normalizedMatrix;
     private Map<Integer, LinkedList<Integer>> colorCodeMap;
     private Map<Integer, LinkedList<Integer>> intensityMap; 
     int picNo = 0;
@@ -228,10 +230,7 @@ public class CBIR extends JFrame {
         intCCButton.setForeground(new java.awt.Color(255, 255, 255));
         intCCButton.setFont(new java.awt.Font("Lucida Grande", 1, 18)); // NOI18N
         intCCButton.setToolTipText("Intensity + Color Code with Relevance Feedback");
-        intCCButton.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        	}
-        });
+        intCCButton.addActionListener(new intencity_colorCodeHandler());
         buttonPanel.add(intCCButton);
 
         panelRight.add(bottomRightPanel);
@@ -340,7 +339,8 @@ public class CBIR extends JFrame {
         // if not both intensity and color code processed then process them
         boolean intenityFileFailed = readIntensityFile();
         boolean colorCodeFileFailed = readColorCodeFile();
-        if(intenityFileFailed || colorCodeFileFailed) {
+        boolean normalizedFileFailed = readNormalizedFile();
+        if(intenityFileFailed || colorCodeFileFailed || normalizedFileFailed) {
             readImage ri = new readImage();
             intenityFileFailed = readIntensityFile();
             colorCodeFileFailed = readColorCodeFile();
@@ -483,6 +483,31 @@ public class CBIR extends JFrame {
         return failed;
     }
 
+    /**************************************************************************
+     * readNormalizedFile - This method opens the normalized text file 
+     * containing the normalized feature matrix values for each image
+     * - The contents of the matrix are processed and stored in a two 
+     *   dimensional array called normalizedMatrix
+     * @return success or failed
+     *************************************************************************/
+    private boolean readNormalizedFile() {
+        boolean failed = true;
+        try {
+        // writes the object to file so later can access directly from object
+            ObjectInputStream in = new ObjectInputStream(
+                    new FileInputStream("normalized.txt"));
+            normalizedMatrix = (double[][]) in.readObject();
+            failed = false;
+        } catch (FileNotFoundException EE) {
+            System.out.println("The file normalized.txt does not exist");
+        } catch (IOException ex) {
+            Logger.getLogger(CBIR.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(CBIR.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return failed;
+    }
+    
     
 //    /**************************************************************************
 //     * displayFirstPage - This method displays the first twenty images in the 
@@ -949,6 +974,7 @@ public class CBIR extends JFrame {
             return (new HashMap<>());
         }
         
+        
         /**********************************************************************
          * writeToColorCodeResultFile - writes updated map to file
          *********************************************************************/
@@ -965,6 +991,247 @@ public class CBIR extends JFrame {
         }
     }  
     
+    
+    
+    /**************************************************************************
+     * intencity_colorCodeHandler class - This class implements an 
+     * 					ActionListener when user selects the int+CC button
+     * - The image number that the user would like to find similar images for 
+     *   is stored in the variable pic
+     * - Selected images that user considered relevant in relevantSet
+     * - The selected image's feature matrix will be normalized and compared 
+     * 	 with all selected normalized image features
+     * - The images are then arranged from most similar to the least
+     *************************************************************************/
+    private class intencity_colorCodeHandler implements ActionListener {
+    	private double[][] subsetNormalizedMatrix;
+    	private double[] weight = new double[INT_CC_COLUMN_SIZE];
+    	private double[] normalizedWeight = new double[INT_CC_COLUMN_SIZE];
+    	private double sigmaW = 0;
+    	private LinkedList<Integer> newOrder = new LinkedList<>();
+    	private double sdMin = Double.MAX_VALUE;
+    	
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+        	Set<Integer> relevantSet = new HashSet<Integer>();
+            
+        	// get the relevant images
+        	for(int image = 1; image < 101; image++ ) {
+            	if(checkBox[image].isSelected()) {
+            		relevantSet.add(image);
+            	}
+            }
+        	
+        	// size = relevantSet.size + 2 for additional space for AVG/SD
+        	subsetNormalizedMatrix = 
+        			new double[relevantSet.size() + 2][INT_CC_COLUMN_SIZE];
+        	int index = 0;
+        	for(int image : relevantSet) {
+        		subsetNormalizedMatrix[index++] = normalizedMatrix[image];
+        	}
+        	
+        	// featureMatrixSize = length-2 to exclude AVG and SD row
+        	int featureMatrixSize = subsetNormalizedMatrix.length - 2;
+        	setAVGforSubMatrix(subsetNormalizedMatrix, featureMatrixSize);
+        	setSDforSubMatrix(subsetNormalizedMatrix, featureMatrixSize);
+        	
+        	// sets normalized feature matrix info
+        	setWeight();
+        	setSigmaW();
+        	setNormalizedWeight();
+        	
+//        	for(int i = 0; i < relevantSet.size() + 1; i++) {
+//        		for(int j = 0; j < 88; j++) {
+//        			System.out.print(subsetNormalizedMatrix[i][j] + ", ");
+//        		}
+//        		System.out.println(subsetNormalizedMatrix[i][88]);
+//        	}
+        	
+            // if coloCodeMap doesn't have the selected image
+        	compareFeatures();
+
+
+            for(int i = 1; i < TOTAL_IMAGE; i++) {
+                buttonOrder[i] = newOrder.get(i - 1);
+            }
+//            
+            displayPage();
+        }
+        
+        
+        /**********************************************************************
+         * setNormalizedWeight - sets normalized weight
+         *********************************************************************/
+        private void setNormalizedWeight() {
+        	for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
+        		normalizedWeight[i] = weight[i] / sigmaW; 
+        			
+        	}
+        }
+        
+        
+        /**********************************************************************
+         * setSigmaW - sets sum of weights
+         *********************************************************************/
+        private void setSigmaW() {
+        	for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
+        		sigmaW += weight[i];
+        	}
+        }
+        
+        
+        /**********************************************************************
+         * setWeight - sets weight for each feature
+         *********************************************************************/
+        private void setWeight() {
+        	int sdrow = subsetNormalizedMatrix.length - 1;
+        	for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
+        		double sd = subsetNormalizedMatrix[sdrow][i];
+        		if(sd > 0) {
+        			weight[i] = 1 / sd;
+        		} else if (sd == 0) {
+        			// sdrow - 1 is row of average
+        			int avgrow = sdrow - 1;
+        			double avg = subsetNormalizedMatrix[avgrow][i];
+        			if(avg == 0) {
+        				weight[i] = 0;
+        			} else {
+        				subsetNormalizedMatrix[sdrow][i] = sdMin / 2;
+        				sd = subsetNormalizedMatrix[sdrow][i];
+        				weight[i] = 1 / sd;
+        			}
+        		}
+        	}
+        }
+        
+        
+        /**********************************************************************
+         * setAVGforSubMatrix - sets average for each feature
+         * - Calculates the average and save in the last row of the matrix
+         * - The last two rows of the matrix are AVG row and SD row 
+         * @param theMatrix to be processed
+         * @param matrixSize size of feature portion 
+         *********************************************************************/
+        private void setAVGforSubMatrix(double[][] theMatrix, int matrixSize) {
+            int average_row = matrixSize;
+
+         // set the average row (101) for the normalized feature matrix
+        	for (int column = 0; column < INT_CC_COLUMN_SIZE; column++) {
+        		double sum = 0;
+        		for(int i = 1; i < matrixSize; i++) {
+    	    		sum += theMatrix[i][column];
+    	    	}
+        		theMatrix[average_row][column] = sum / matrixSize; 
+        	}            		
+        }
+        
+        /**********************************************************************
+         * setSDforSubMatrix - sets standard deviation for each feature
+         * - Calculates the standard deviation and save in the last row of the 
+         *   matrix
+         * - The last two rows of the matrix are AVG row and SD row 
+         * @param theMatrix to be processed
+         * @param matrixSize size of feature portion 
+         *********************************************************************/
+        private void setSDforSubMatrix(double[][] theMatrix, int matrixSize) {
+            int sd_row = matrixSize + 1;
+        	
+        	// set the SD row (102) for the normalized feature matrix
+        	for (int column = 0; column < INT_CC_COLUMN_SIZE; column++) {
+        		double sum_of_square = 0;
+        		double avg = theMatrix[matrixSize][column];
+        		for(int i = 1; i < matrixSize; i++) {
+//        			System.out.println(Math.pow((theMatrix[i][column] - avg), 2));
+        			sum_of_square += 
+        					Math.pow((theMatrix[i][column] - avg), 2);
+    	    	}
+        		double sd = Math.pow((sum_of_square / (matrixSize - 1)), 0.5);
+        		theMatrix[sd_row][column] = sd;
+        		if(sd > 0 && sd < sdMin) {
+        			sdMin = sd;
+        		}
+        	}
+        }
+        
+
+        
+        /**********************************************************************
+         * setColorCodeMap - sets the colorCode map if intensity map is empty
+         *                   or doesn't have the key requested
+         * - This method calculates the Manhattan Distance
+         * @param i the image number
+         *********************************************************************/
+        private void compareFeatures() {
+        	Map<Double, LinkedList<Integer>> map = new TreeMap<>();
+        	
+            double distanceKey, featureQi, featureCi; 
+            for(int k = 1; k < TOTAL_IMAGE; k++) {
+                distanceKey = 0;
+                for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
+                    featureQi = (double)normalizedMatrix[picNo][i];
+                    featureCi = (double)normalizedMatrix[k][i];
+                    distanceKey += weight[i] * Math.abs(featureQi - featureCi);
+                }
+
+                if(map.keySet().contains(distanceKey)) {
+                    map.get(distanceKey).add(k);
+                } else {
+                    LinkedList<Integer> list = new LinkedList<>();
+                    list.add(k);
+                    map.put(distanceKey, list);
+                }
+            }
+
+            map.entrySet().stream().forEach((entry) -> {
+                newOrder.addAll(entry.getValue());
+            });
+
+        }
+        
+
+//        /**********************************************************************
+//         * readColorCodeResultFile - This method opens the color code text file
+//         *                           containing the color code matrix with the 
+//         *                           histogram bin values for each image
+//         * - The contents of the matrix are processed and stored in a two 
+//         *   dimensional array called colorCodeMatrix.
+//         * @return updated map
+//         *********************************************************************/
+//        private HashMap<Integer,LinkedList<Integer>> readColorCodeResultFile(){
+//            try {
+//                ObjectInputStream in = new ObjectInputStream(
+//                        new FileInputStream("colorCodeResult.txt"));
+//
+//                return (HashMap<Integer, LinkedList<Integer>>) in.readObject();
+//            } catch (FileNotFoundException EE) {
+//                System.out.println(
+//                        "The file colorCodeResult.txt does not exist");
+//            } catch (IOException ex) {
+//                Logger.getLogger(CBIR.class.getName())
+//                        .log(Level.SEVERE, null, ex);
+//            } catch (ClassNotFoundException ex) {
+//                Logger.getLogger(CBIR.class.getName())
+//                        .log(Level.SEVERE, null, ex);
+//            }
+//            return (new HashMap<>());
+//        }
+        
+//        /**********************************************************************
+//         * writeToColorCodeResultFile - writes updated map to file
+//         *********************************************************************/
+//        private void writeToColorCodeResultFile() {
+//            try {
+//                ObjectOutputStream out = new ObjectOutputStream(
+//                        new FileOutputStream("colorCodeResult.txt")); 
+//
+//                out.writeObject(colorCodeMap);
+//            } catch (IOException ex) {
+//                Logger.getLogger(readImage.class.getName()).log(
+//                        Level.SEVERE, null, ex);
+//            }
+//        }
+    }
     
     /**************************************************************************
      * main - starts splash screen, executes CBIR form
