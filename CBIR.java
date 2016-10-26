@@ -21,6 +21,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.JRadioButton;
 import java.awt.SystemColor;
 import javax.swing.SwingConstants;
+import javax.swing.JSplitPane;
+import java.awt.GridLayout;
 
 /******************************************************************************
  * <pre>
@@ -117,7 +119,9 @@ public class CBIR extends JFrame {
         getContentPane().setLayout(new java.awt.GridLayout(1, 2, 5, 5));
 
         panelLeft.setBackground(new java.awt.Color(255, 255, 255));
-        panelLeft.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Galary - Please Select an Image", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Lucida Grande", 1, 13), new java.awt.Color(102, 102, 102))); // NOI18N
+        panelLeft.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Gallery - Please Select an Image", 
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, 
+                new java.awt.Font("Lucida Grande", 1, 13), new java.awt.Color(102, 102, 102))); // NOI18N
         panelLeft.setLayout(new java.awt.GridLayout(5, 4, 5, 5));
         getContentPane().add(panelLeft);
 
@@ -129,7 +133,10 @@ public class CBIR extends JFrame {
         photographLabel.setForeground(new java.awt.Color(102, 102, 102));
         photographLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         photographLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("logo/not-selected.png"))); // NOI18N
-        photographLabel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Photo", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Lucida Grande", 1, 14), new java.awt.Color(102, 102, 102))); // NOI18N
+        photographLabel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Photo", 
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, 
+                javax.swing.border.TitledBorder.DEFAULT_POSITION, 
+                new java.awt.Font("Lucida Grande", 1, 14), new java.awt.Color(102, 102, 102))); // NOI18N
         photographLabel.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         photographLabel.setSize(new java.awt.Dimension(400, 300));
         photographLabel.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -155,17 +162,6 @@ public class CBIR extends JFrame {
         previousPage.setText("<");
         previousPage.setToolTipText("Previous page");
         previousPage.addActionListener(new CBIR.previousPageHandler());
-        
-        panel = new JPanel();
-        buttonPanel.add(panel);
-        panel.setLayout(new BorderLayout(0, 0));
-        
-        chckbxNewCheckBox = new JCheckBox("HOla");
-        chckbxNewCheckBox.setSelected(true);
-        chckbxNewCheckBox.setVerticalAlignment(SwingConstants.BOTTOM);
-        panel.add(chckbxNewCheckBox, BorderLayout.SOUTH);
-        chckbxNewCheckBox.setFont(new Font("Lucida Console", Font.PLAIN, 11));
-        chckbxNewCheckBox.setForeground(new Color(255, 20, 147));
         buttonPanel.add(previousPage);
 
         pageInfo.setFont(new java.awt.Font("Lucida Grande", 1, 14)); // NOI18N
@@ -212,25 +208,56 @@ public class CBIR extends JFrame {
 
         bottomRightPanel.add(buttonPanel);
         
+        rfPanel = new JPanel();
+        rfPanel.setBackground(Color.WHITE);
+        buttonPanel.add(rfPanel);
+        rfPanel.setLayout(new GridLayout(3, 1, 2, 2));
+        
 
         relevantButton = new JRadioButton("Relevance Off");
+        rfPanel.add(relevantButton);
         relevantButton.setForeground(DISABLED_FONT_COLOR);
         relevantButton.setFont(new java.awt.Font("Lucida Grande", 1, 14)); // NOI18N
         relevantButton.setEnabled(false);
-        relevantButton.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent e) {
-        		relevantOn = !relevantOn;
-        		setReleventButtonDependents(relevantOn);
-        	}
-        });
-        buttonPanel.add(relevantButton);
         
-        intCCButton = new JButton("Int. + CC");
+        selectAll = new JButton("Check All");
+        selectAll.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // set select all to true to select all
+                selectAllCheckBoxes(true);
+            }
+        });
+        rfPanel.add(selectAll);
+        selectAll.setToolTipText("Intensity + Color Code with Relevance Feedback");
+        selectAll.setForeground(Color.WHITE);
+        selectAll.setFont(new Font("Lucida Grande", Font.BOLD, 14));
+        selectAll.setBackground(new Color(72, 62, 77));
+        
+        deselectAll = new JButton("Uncheck All");
+        deselectAll.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // set select all to false to deselect all
+                selectAllCheckBoxes(false);
+            }
+        });
+        rfPanel.add(deselectAll);
+        deselectAll.setToolTipText("Intensity + Color Code with Relevance Feedback");
+        deselectAll.setForeground(Color.WHITE);
+        deselectAll.setFont(new Font("Lucida Grande", Font.BOLD, 14));
+        deselectAll.setBackground(new Color(72, 62, 77));
+        relevantButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                relevantOn = !relevantOn;
+                setReleventButtonDependents(relevantOn);
+            }
+        });
+        
+        intCCButton = new JButton("RF");
         intCCButton.setBackground(BUTTON_BACKGROUD);
         intCCButton.setForeground(new java.awt.Color(255, 255, 255));
         intCCButton.setFont(new java.awt.Font("Lucida Grande", 1, 18)); // NOI18N
         intCCButton.setToolTipText("Intensity + Color Code with Relevance Feedback");
-        intCCButton.addActionListener(new intencity_colorCodeHandler());
+        intCCButton.addActionListener(new RF_Handler());
         buttonPanel.add(intCCButton);
 
         panelRight.add(bottomRightPanel);
@@ -351,7 +378,7 @@ public class CBIR extends JFrame {
     
     /**************************************************************************
      * loadButtonsAndCreateCheckBoxes - Loads the 100 images to buttons 
-     * 									Also creates check boxes
+     *                                  Also creates check boxes
      * - Only called once when CBIR starts
      *************************************************************************/
     private void loadButtonsAndCreateCheckBoxes() {
@@ -415,7 +442,7 @@ public class CBIR extends JFrame {
         
         resetCheckBoxes();
         if(relevantOn) {
-        	relevantOn = !relevantOn;
+            relevantOn = !relevantOn;
         }
         setReleventButtonDependents(relevantOn);
         relevantButton.setSelected(false);
@@ -497,6 +524,24 @@ public class CBIR extends JFrame {
             ObjectInputStream in = new ObjectInputStream(
                     new FileInputStream("normalized.txt"));
             normalizedMatrix = (double[][]) in.readObject();
+            
+// CHECK WITH GALEN
+//            for(int i = 90; i < 101; i++) {
+//              System.out.print("Image " + (i - 1) + " normalized features: [");
+//              for(int j = 0; j < 88; j++ ) {
+//                  System.out.print(normalizedMatrix[i][j] +", ");
+//              }System.out.println(normalizedMatrix[i][88] +"]");
+//            }
+//            
+           
+// CHECK WITH JIA
+//              for(int j = 0; j < 89; j++ ) {
+//                  System.out.print(normalizedMatrix[1][j] +",");
+//              }
+            
+            
+            
+            
             failed = false;
         } catch (FileNotFoundException EE) {
             System.out.println("The file normalized.txt does not exist");
@@ -555,17 +600,17 @@ public class CBIR extends JFrame {
         imageCount = 1;
         enableCheckBoxes(relevantOn);
         for (int i = 1; i < 21; i++) {
-        	imageButNo = buttonOrder[i];
-        	
-//        	JPanel holder = new JPanel();
-//        	holder.setLayout(new BorderLayout());
-//        	holder.setBackground(Color.WHITE);
+            imageButNo = buttonOrder[i];
+            
+//          JPanel holder = new JPanel();
+//          holder.setLayout(new BorderLayout());
+//          holder.setBackground(Color.WHITE);
 //            holder.add(button[imageButNo], BorderLayout.CENTER);
 //            holder.add(checkBox[imageButNo], BorderLayout.SOUTH);
 //            panelLeft.add(holder);
             
             
-        	putButtonAndCheckboxIntoHolder(imageButNo);
+            putButtonAndCheckboxIntoHolder(imageButNo);
             
             
             imageCount++;
@@ -581,23 +626,23 @@ public class CBIR extends JFrame {
     
     
     private void putButtonAndCheckboxIntoHolder(int imageButNo) {
-    	JPanel holder = new JPanel();
-    	holder.setLayout(new BorderLayout());
-    	holder.setBackground(Color.WHITE);
-    	holder.add(button[imageButNo], BorderLayout.CENTER);
+        JPanel holder = new JPanel();
+        holder.setLayout(new BorderLayout());
+        holder.setBackground(Color.WHITE);
+        holder.add(button[imageButNo], BorderLayout.CENTER);
         holder.add(checkBox[imageButNo], BorderLayout.SOUTH);
         panelLeft.add(holder);
     }
-	
+    
     /**************************************************************************
      * enableCheckBox - Enables or disables all check boxes
      * @param enable_it the check boxes
      *************************************************************************/
     private void enableCheckBoxes(boolean enable_it) {
         for(int i = 1; i <TOTAL_IMAGE; i++) {
-        	checkBox[i].setEnabled(enable_it);
-        	Color fontColor = (enable_it) ? FONT_COLOR : DISABLED_FONT_COLOR; 
-        	checkBox[i].setForeground(fontColor);
+            checkBox[i].setEnabled(enable_it);
+            Color fontColor = (enable_it) ? FONT_COLOR : DISABLED_FONT_COLOR; 
+            checkBox[i].setForeground(fontColor);
         }
     }
     
@@ -625,9 +670,10 @@ public class CBIR extends JFrame {
      *************************************************************************/
     private void setReleventButtonDependents(boolean on) {
        if (on) {
-    	   relevantButton.setForeground(GREEN_LIGHT);
+           relevantButton.setForeground(GREEN_LIGHT);
+           
        } else {
-    	   relevantButton.setForeground(FONT_COLOR);
+           relevantButton.setForeground(FONT_COLOR);
        }
        enableCheckBoxes(on);
     }
@@ -638,15 +684,27 @@ public class CBIR extends JFrame {
      * @param enabled if is clicked
      *************************************************************************/
     private void enableRelevantButton(boolean enabled) {
-    	if (enabled) {
-    	   relevantButton.setEnabled(enabled);
+        if (enabled) {
+           relevantButton.setEnabled(enabled);
            relevantButton.setForeground(FONT_COLOR);
        } else {
-    	   relevantButton.setEnabled(enabled);
+           relevantButton.setEnabled(enabled);
            relevantButton.setForeground(DISABLED_FONT_COLOR);
        }
     }
-
+    
+    
+    /**************************************************************************
+     * selectAllCheckBoxes - Selects all check boxes
+     * @param allOn true selects all, otherwise deselect all
+     *************************************************************************/
+    private void selectAllCheckBoxes(boolean allOn) {
+        if(relevantOn) {
+            for(int i = 1; i < TOTAL_IMAGE; i++) {
+                checkBox[i].setSelected(allOn);
+            }
+        }
+    }
     
     /**************************************************************************
      * IconButtonHandler class - This class implements an ActionListener for 
@@ -695,14 +753,14 @@ public class CBIR extends JFrame {
                 previousPage.setEnabled(true);
                 panelLeft.removeAll();
                 for (int i = imageCount; i < endImage; i++) {
-                	imageButNo = buttonOrder[i];
-//                	JPanel holder = new JPanel();
-//                	holder.setLayout(new BorderLayout());
-//                	holder.setBackground(Color.WHITE);
-//                	holder.add(button[imageButNo], BorderLayout.CENTER);
+                    imageButNo = buttonOrder[i];
+//                  JPanel holder = new JPanel();
+//                  holder.setLayout(new BorderLayout());
+//                  holder.setBackground(Color.WHITE);
+//                  holder.add(button[imageButNo], BorderLayout.CENTER);
 //                    holder.add(checkBox[imageButNo], BorderLayout.SOUTH);
 //                    panelLeft.add(holder);
-                	putButtonAndCheckboxIntoHolder(imageButNo);
+                    putButtonAndCheckboxIntoHolder(imageButNo);
                     imageCount++;
                 }
                 pageNo++;
@@ -738,14 +796,14 @@ public class CBIR extends JFrame {
                 for (int i = startImage; i < endImage; i++) {
                     imageButNo = buttonOrder[i];
 ////                    panelLeft.add(button[imageButNo]);
-//                	imageButNo = buttonOrder[i];
-//                	JPanel holder = new JPanel();
-//                	holder.setLayout(new BorderLayout());
-//                	holder.setBackground(Color.WHITE);
-//                	holder.add(button[imageButNo], BorderLayout.CENTER);
+//                  imageButNo = buttonOrder[i];
+//                  JPanel holder = new JPanel();
+//                  holder.setLayout(new BorderLayout());
+//                  holder.setBackground(Color.WHITE);
+//                  holder.add(button[imageButNo], BorderLayout.CENTER);
 //                    holder.add(checkBox[imageButNo], BorderLayout.SOUTH);
 //                    panelLeft.add(holder);
-                	putButtonAndCheckboxIntoHolder(imageButNo);
+                    putButtonAndCheckboxIntoHolder(imageButNo);
                     imageCount--;
                 }
                 pageNo--;
@@ -842,7 +900,7 @@ public class CBIR extends JFrame {
                 ObjectInputStream in = new ObjectInputStream(
                         new FileInputStream("intensityResult.txt"));
 
-            	return (HashMap<Integer, LinkedList<Integer>>) in.readObject();
+                return (HashMap<Integer, LinkedList<Integer>>) in.readObject();
             } catch (FileNotFoundException EE) {
                 System.out.println(
                         "The file intensityResult.txt does not exist");
@@ -861,7 +919,7 @@ public class CBIR extends JFrame {
          *********************************************************************/
         private void writeToIntensityResultFile() {
             try {
-            	ObjectOutputStream out = new ObjectOutputStream(
+                ObjectOutputStream out = new ObjectOutputStream(
                     new FileOutputStream("intensityResult.txt")); 
 
                 out.writeObject(intensityMap);
@@ -994,167 +1052,134 @@ public class CBIR extends JFrame {
     
     
     /**************************************************************************
-     * intencity_colorCodeHandler class - This class implements an 
-     * 					ActionListener when user selects the int+CC button
+     * RF_Handler class - This class implements an 
+     *                  ActionListener when user selects the int+CC button
      * - The image number that the user would like to find similar images for 
      *   is stored in the variable pic
      * - Selected images that user considered relevant in relevantSet
      * - The selected image's feature matrix will be normalized and compared 
-     * 	 with all selected normalized image features
+     *   with all selected normalized image features
      * - The images are then arranged from most similar to the least
      *************************************************************************/
-    private class intencity_colorCodeHandler implements ActionListener {
-    	private double[][] subsetNormalizedMatrix;
-    	private double[] weight = new double[INT_CC_COLUMN_SIZE];
-    	private double[] normalizedWeight = new double[INT_CC_COLUMN_SIZE];
-    	private double sigmaW = 0;
-    	private LinkedList<Integer> newOrder = new LinkedList<>();
-    	private double sdMin = Double.MAX_VALUE;
-    	
+    private class RF_Handler implements ActionListener {
+        private double[][] subsetNormalizedMatrix;
+        private double[] weight;
+        private double[] normalizedWeight;
+        private double sigmaW;
+        private LinkedList<Integer> newOrder;
+        private double sdMin;
+        
         @Override
         public void actionPerformed(ActionEvent e) {
-
-        	Set<Integer> relevantSet = new HashSet<Integer>();
+            weight = new double[INT_CC_COLUMN_SIZE];
+            normalizedWeight = new double[INT_CC_COLUMN_SIZE];
+            sigmaW = 0;
+            newOrder = new LinkedList<>();
+            sdMin = Double.MAX_VALUE;
+            Set<Integer> relevantSet = new HashSet<Integer>();
             
-        	// get the relevant images
-        	for(int image = 1; image < 101; image++ ) {
-            	if(checkBox[image].isSelected()) {
-            		relevantSet.add(image);
-            	}
+            
+            
+            if(picNo > 0) {
+                // The query image should always be added
+                relevantSet.add(picNo);
+                // get the relevant images
+                for(int image = 1; image < 101; image++ ) {
+                    if(checkBox[image].isSelected()) {
+                        relevantSet.add(image);
+                    }
+                }
+                if(relevantSet.size() == 1) {
+                    // if size == 1 means only query image is checked
+                    relevantSet.remove(picNo);
+                }
+                
+                
+                // size = relevantSet.size + 2 for additional space for AVG/SD
+                subsetNormalizedMatrix = 
+                        new double[relevantSet.size() + 2][INT_CC_COLUMN_SIZE];
+                int index = 0;
+                for(int image : relevantSet) {
+                    subsetNormalizedMatrix[index++] = normalizedMatrix[image];
+                }
+                
+                // featureMatrixSize = length-2 to exclude AVG and SD row
+                int featureMatrixSize = subsetNormalizedMatrix.length - 2;
+                setAVGforSubMatrix(subsetNormalizedMatrix, featureMatrixSize);          
+                setSDforSubMatrix(subsetNormalizedMatrix, featureMatrixSize);
+    
+                
+                // sets normalized feature matrix info
+                setWeight();
+                setSigmaW();
+                setNormalizedWeight();
+                
+    //          for(int i = 0; i < relevantSet.size() + 1; i++) {
+    //              for(int j = 0; j < 88; j++) {
+    //                  System.out.print(subsetNormalizedMatrix[i][j] + ", ");
+    //              }
+    //              System.out.println(subsetNormalizedMatrix[i][88]);
+    //          }
+                
+                System.out.println("Average: ");
+                for(int i = 0; i < 88; i++) {
+                    System.out.print(subsetNormalizedMatrix[featureMatrixSize][i]);
+                }System.out.println(subsetNormalizedMatrix[featureMatrixSize][88]);
+                
+                System.out.println("SD: ");
+                for(int i = 0; i < 88; i++) {
+                    System.out.print(subsetNormalizedMatrix[featureMatrixSize + 1][i]);
+                }System.out.println(subsetNormalizedMatrix[featureMatrixSize + 1][88]);
+                
+                System.out.println("Weight: ");
+                for(int i = 0; i < 88; i++) {
+                    System.out.print(weight[i]);
+                }System.out.println(weight[88]);
+                
+                System.out.print("Sigma weight: "); 
+                System.out.println(sigmaW);
+                
+                System.out.print("picNo: ");
+                System.out.println(picNo);
+    
+                System.out.print("Selected set: ");
+                for(int image : relevantSet) {
+                    System.out.print(image + ", ");
+                }
+    
+                
+                // if coloCodeMap doesn't have the selected image
+                compareFeatures();
+                
+                System.out.println("newOrder size(): " + newOrder.size());
+                System.out.println("newOrder: ");
+                for(int i = 0; i < newOrder.size() - 1; i++) {
+                    System.out.print(newOrder.get(i));
+                } System.out.println(newOrder.get(newOrder.size() - 1));
+                
+                
+                
+    
+                
+                for(int i = 1; i < TOTAL_IMAGE; i++) {
+                    buttonOrder[i] = newOrder.get(i - 1);
+                }
+                
+                
+                System.out.println("buttonOrder size(): " + buttonOrder.length);
+                System.out.println("buttonOrder: ");
+                for(int i = 0; i < buttonOrder.length - 1; i++) {
+                    System.out.print(buttonOrder[i]);
+                } System.out.println(buttonOrder[newOrder.size() - 1]);
+                
+                System.out.println();
+                System.out.println();
+                System.out.println();
+                
+    //            
+                displayPage();
             }
-        	
-        	// size = relevantSet.size + 2 for additional space for AVG/SD
-        	subsetNormalizedMatrix = 
-        			new double[relevantSet.size() + 2][INT_CC_COLUMN_SIZE];
-        	int index = 0;
-        	for(int image : relevantSet) {
-        		subsetNormalizedMatrix[index++] = normalizedMatrix[image];
-        	}
-        	
-        	// featureMatrixSize = length-2 to exclude AVG and SD row
-        	int featureMatrixSize = subsetNormalizedMatrix.length - 2;
-        	setAVGforSubMatrix(subsetNormalizedMatrix, featureMatrixSize);
-        	setSDforSubMatrix(subsetNormalizedMatrix, featureMatrixSize);
-        	
-        	// sets normalized feature matrix info
-        	setWeight();
-        	setSigmaW();
-        	setNormalizedWeight();
-        	
-//        	for(int i = 0; i < relevantSet.size() + 1; i++) {
-//        		for(int j = 0; j < 88; j++) {
-//        			System.out.print(subsetNormalizedMatrix[i][j] + ", ");
-//        		}
-//        		System.out.println(subsetNormalizedMatrix[i][88]);
-//        	}
-        	
-            // if coloCodeMap doesn't have the selected image
-        	compareFeatures();
-
-
-            for(int i = 1; i < TOTAL_IMAGE; i++) {
-                buttonOrder[i] = newOrder.get(i - 1);
-            }
-//            
-            displayPage();
         }
-        
-        
-        /**********************************************************************
-         * setNormalizedWeight - sets normalized weight
-         *********************************************************************/
-        private void setNormalizedWeight() {
-        	for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
-        		normalizedWeight[i] = weight[i] / sigmaW; 
-        			
-        	}
-        }
-        
-        
-        /**********************************************************************
-         * setSigmaW - sets sum of weights
-         *********************************************************************/
-        private void setSigmaW() {
-        	for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
-        		sigmaW += weight[i];
-        	}
-        }
-        
-        
-        /**********************************************************************
-         * setWeight - sets weight for each feature
-         *********************************************************************/
-        private void setWeight() {
-        	int sdrow = subsetNormalizedMatrix.length - 1;
-        	for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
-        		double sd = subsetNormalizedMatrix[sdrow][i];
-        		if(sd > 0) {
-        			weight[i] = 1 / sd;
-        		} else if (sd == 0) {
-        			// sdrow - 1 is row of average
-        			int avgrow = sdrow - 1;
-        			double avg = subsetNormalizedMatrix[avgrow][i];
-        			if(avg == 0) {
-        				weight[i] = 0;
-        			} else {
-        				subsetNormalizedMatrix[sdrow][i] = sdMin / 2;
-        				sd = subsetNormalizedMatrix[sdrow][i];
-        				weight[i] = 1 / sd;
-        			}
-        		}
-        	}
-        }
-        
-        
-        /**********************************************************************
-         * setAVGforSubMatrix - sets average for each feature
-         * - Calculates the average and save in the last row of the matrix
-         * - The last two rows of the matrix are AVG row and SD row 
-         * @param theMatrix to be processed
-         * @param matrixSize size of feature portion 
-         *********************************************************************/
-        private void setAVGforSubMatrix(double[][] theMatrix, int matrixSize) {
-            int average_row = matrixSize;
-
-         // set the average row (101) for the normalized feature matrix
-        	for (int column = 0; column < INT_CC_COLUMN_SIZE; column++) {
-        		double sum = 0;
-        		for(int i = 1; i < matrixSize; i++) {
-    	    		sum += theMatrix[i][column];
-    	    	}
-        		theMatrix[average_row][column] = sum / matrixSize; 
-        	}            		
-        }
-        
-        /**********************************************************************
-         * setSDforSubMatrix - sets standard deviation for each feature
-         * - Calculates the standard deviation and save in the last row of the 
-         *   matrix
-         * - The last two rows of the matrix are AVG row and SD row 
-         * @param theMatrix to be processed
-         * @param matrixSize size of feature portion 
-         *********************************************************************/
-        private void setSDforSubMatrix(double[][] theMatrix, int matrixSize) {
-            int sd_row = matrixSize + 1;
-        	
-        	// set the SD row (102) for the normalized feature matrix
-        	for (int column = 0; column < INT_CC_COLUMN_SIZE; column++) {
-        		double sum_of_square = 0;
-        		double avg = theMatrix[matrixSize][column];
-        		for(int i = 1; i < matrixSize; i++) {
-//        			System.out.println(Math.pow((theMatrix[i][column] - avg), 2));
-        			sum_of_square += 
-        					Math.pow((theMatrix[i][column] - avg), 2);
-    	    	}
-        		double sd = Math.pow((sum_of_square / (matrixSize - 1)), 0.5);
-        		theMatrix[sd_row][column] = sd;
-        		if(sd > 0 && sd < sdMin) {
-        			sdMin = sd;
-        		}
-        	}
-        }
-        
-
         
         /**********************************************************************
          * setColorCodeMap - sets the colorCode map if intensity map is empty
@@ -1163,8 +1188,8 @@ public class CBIR extends JFrame {
          * @param i the image number
          *********************************************************************/
         private void compareFeatures() {
-        	Map<Double, LinkedList<Integer>> map = new TreeMap<>();
-        	
+            Map<Double, LinkedList<Integer>> map = new TreeMap<>();
+            
             double distanceKey, featureQi, featureCi; 
             for(int k = 1; k < TOTAL_IMAGE; k++) {
                 distanceKey = 0;
@@ -1188,6 +1213,105 @@ public class CBIR extends JFrame {
             });
 
         }
+        
+        
+        /**********************************************************************
+         * setNormalizedWeight - sets normalized weight
+         *********************************************************************/
+        private void setNormalizedWeight() {
+            for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
+                normalizedWeight[i] = weight[i] / sigmaW; 
+                    
+            }
+        }
+        
+        
+        /**********************************************************************
+         * setSigmaW - sets sum of weights
+         *********************************************************************/
+        private void setSigmaW() {
+            for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
+                sigmaW += weight[i];
+            }
+        }
+        
+        
+        /**********************************************************************
+         * setWeight - sets weight for each feature
+         *********************************************************************/
+        private void setWeight() {
+            int sdrow = subsetNormalizedMatrix.length - 1;
+            for(int i = 0; i < INT_CC_COLUMN_SIZE; i++) {
+                double sd = subsetNormalizedMatrix[sdrow][i];
+                if(sd > 0) {
+                    weight[i] = 1 / sd;
+                } else if (sd == 0) {
+                    // sdrow - 1 is row of average
+                    int avgrow = sdrow - 1;
+                    double avg = subsetNormalizedMatrix[avgrow][i];
+                    if(avg == 0) {
+                        weight[i] = 0;
+                    } else {
+                        subsetNormalizedMatrix[sdrow][i] = sdMin / 2;
+                        sd = subsetNormalizedMatrix[sdrow][i];
+                        weight[i] = 1 / sd;
+                    }
+                }
+            }
+        }
+        
+        
+        /**********************************************************************
+         * setAVGforSubMatrix - sets average for each feature
+         * - Calculates the average and save in the last row of the matrix
+         * - The last two rows of the matrix are AVG row and SD row 
+         * @param theMatrix to be processed
+         * @param matrixSize size of feature portion 
+         *********************************************************************/
+        private void setAVGforSubMatrix(double[][] theMatrix, int matrixSize) {
+            int average_row = matrixSize;
+
+         // set the average row (101) for the normalized feature matrix
+            for (int column = 0; column < INT_CC_COLUMN_SIZE; column++) {
+                double sum = 0;
+                for(int i = 0; i < matrixSize; i++) {
+                    sum += theMatrix[i][column];
+                }
+                theMatrix[average_row][column] = sum / matrixSize; 
+            }                   
+        }
+        
+        /**********************************************************************
+         * setSDforSubMatrix - sets standard deviation for each feature
+         * - Calculates the standard deviation and save in the last row of the 
+         *   matrix
+         * - The last two rows of the matrix are AVG row and SD row 
+         * @param theMatrix to be processed
+         * @param matrixSize size of feature portion 
+         *********************************************************************/
+        private void setSDforSubMatrix(double[][] theMatrix, int matrixSize) {
+            int sd_row = matrixSize + 1;
+            
+            // set the SD row (102) for the normalized feature matrix
+            for (int column = 0; column < INT_CC_COLUMN_SIZE; column++) {
+                double sum_of_square = 0;
+                double avg = theMatrix[matrixSize][column];
+                for(int i = 0; i < matrixSize; i++) {
+//                  System.out.println(Math.pow((theMatrix[i][column] - avg), 2));
+                    sum_of_square += 
+                            Math.pow((theMatrix[i][column] - avg), 2);
+                }
+                double sd = Math.pow((sum_of_square / (matrixSize - 1)), 0.5);
+                theMatrix[sd_row][column] = sd;
+                if(sd > 0 && sd < sdMin) {
+                    sdMin = sd;
+                }
+            }
+        }
+        
+
+        
+        
         
 
 //        /**********************************************************************
@@ -1301,7 +1425,8 @@ public class CBIR extends JFrame {
     private javax.swing.JMenuItem resetJMenuItem;
     private JRadioButton relevantButton;
     private JButton intCCButton;
-    private JCheckBox chckbxNewCheckBox;
-    private JPanel panel;
+    private JPanel rfPanel;
+    private JButton selectAll;
+    private JButton deselectAll;
     // End of variables declaration//GEN-END:variables
 }
