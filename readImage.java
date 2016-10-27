@@ -93,9 +93,7 @@ public class readImage {
         // set up the original feature matrix for 100 images
         for(int i = 1; i < 101; i++) {
             double size = intensityMatrix[i][0];
-//          
-//          System.out.println("The size for " +i+" is : "+size);
-//          
+
             for(int j = 1; j < INTENSITY_BIN_SIZE; j++) {
                 originalFeatureMatirx[i][j - 1] = 
                         ((double)intensityMatrix[i][j]) / size;
@@ -113,96 +111,6 @@ public class readImage {
         setOriginalFeatureMatrixAVG(matrixSize);
         setOriginalFeatureMatrixSD(matrixSize);
         
-//      // set the average row (101) for the original feature matrix
-//      for (int column = 0; column < 89; column++) {
-//          double sum = 0;
-//          for(int i = 1; i < matrixSize; i++) {
-//              sum += originalFeatureMatirx[i][column];
-//          }
-//          originalFeatureMatirx[AVERAGE_ROW][column] = sum / N; 
-//      }
-//      
-//      
-//      // set the SD row (102) for the original feature matrix
-//      for (int column = 0; column < 89; column++) {
-//          double sum_of_square = 0;
-//          double avg = originalFeatureMatirx[AVERAGE_ROW][column];
-//          for(int i = 1; i < matrixSize; i++) {
-////                System.out.println(Math.pow((originalFeatureMatirx[i][column] - avg), 2));
-//              sum_of_square += 
-//                      Math.pow((originalFeatureMatirx[i][column] - avg), 2);
-//          }
-//          originalFeatureMatirx[SD_ROW][column] = 
-//                  Math.pow((sum_of_square / (N - 1)), 0.5);
-//      }
-        
-        
-        
-        
-// PRINT FEATURES   
-//      for(int i = 1; i < 101; i++) {
-//          System.out.print("[");
-//          for(int j = 1; j < INTENSITY_BIN_SIZE; j++) {
-//              System.out.print(((double)intensityMatrix[i][j]) / 98304 + ", ");
-//          }
-//          for(int j = 0; j < COLOR_CODE_BIN_SIZE; j++) {
-//              System.out.print(((double)colorCodeMatrix[i][j]) / 98304 + ", ");
-//          }
-//          System.out.println("]");
-//          System.out.print("[");
-//          for(int j = 0; j < 89; j++) {
-//              System.out.print(originalFeatureMatirx[i][j] + ", ");
-//          }
-//          System.out.println("]");
-//      }
-
-        
-//      // PRINT AVERAGE 0
-//      System.out.println("Average here: ");
-//      for (int column = 0; column < 89; column++) {
-//          if(originalFeatureMatirx[101][column] == 0) {
-//              System.out.println(originalFeatureMatirx[101][column] + " From " + column);
-//          }
-//      }
-//      System.out.println();
-
-        
-//      // PRINT SD 0
-//      System.out.println("SD here: ");
-//      for (int column = 0; column < 89; column++) {
-//          if(originalFeatureMatirx[102][column] == 0) {
-//              System.out.println(originalFeatureMatirx[102][column] + " From " + column);
-//          }
-//      }
-        
-//      
-//      // print SD 0 columns:
-//      for(int i = 1; i < 101; i++) {
-//          System.out.print(  originalFeatureMatirx[i][28] + ", ");
-//          System.out.print(  originalFeatureMatirx[i][37] + ", ");
-//          System.out.print(  originalFeatureMatirx[i][38] + ", ");
-//          System.out.print(  originalFeatureMatirx[i][39] + ", ");
-//          System.out.print(  originalFeatureMatirx[i][40] + ", ");
-//          System.out.print(  originalFeatureMatirx[i][44] + ", ");
-//          System.out.print(  originalFeatureMatirx[i][60] + ", ");
-//          System.out.println(originalFeatureMatirx[i][76] );
-//      }
-        
-        
-// PRINT AVERAGE  and SD valeus
-//      System.out.println("Average here: ");
-//      for (int column = 0; column < 89; column++) {
-//          System.out.print(originalFeatureMatirx[101][column] + ", ");
-//          
-//      }
-//      System.out.println();
-//      // PRINT SD 
-//      System.out.println("SD here: ");
-//      for (int column = 0; column < 89; column++) {
-//          System.out.print(originalFeatureMatirx[102][column] + ", ");
-//      }
-//      
-    
     }
     
     
@@ -229,13 +137,11 @@ public class readImage {
             double sum_of_square = 0;
             double avg = originalFeatureMatirx[AVERAGE_ROW][column];
             for(int i = 1; i < matrixSize; i++) {
-//              System.out.println(Math.pow((originalFeatureMatirx[i][column] - avg), 2));
                 sum_of_square += 
                         Math.pow((originalFeatureMatirx[i][column] - avg), 2);
             }
             originalFeatureMatirx[SD_ROW][column] = 
                     Math.sqrt((sum_of_square / (N - 1)));
-//                  Math.pow((sum_of_square / (N - 1)), 0.5);
         }
     }
     
@@ -254,13 +160,6 @@ public class readImage {
                 }
             }
         }
-//      // PRINT normalized matrix
-//      for(int i = 1; i < 101; i++) {
-//          for(int j = 0; j < 88; j++) {
-//              System.out.print(normalizedMatrix[i][j] + ", ");
-//          }
-//          System.out.println(normalizedMatrix[i][88] + "");
-//      }
     }
     
 
