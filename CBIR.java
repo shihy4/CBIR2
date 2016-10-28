@@ -1200,7 +1200,8 @@ public class CBIR extends JFrame {
                     sum_of_square += 
                             Math.pow((theMatrix[i][column] - avg), 2);
                 }
-                double sd = Math.pow((sum_of_square / (matrixSize - 1)), 0.5);
+                double sd = Math.sqrt(sum_of_square / (matrixSize - 1));
+
                 theMatrix[sd_row][column] = sd;
                 if(sd > 0 && sd < sdMin) {
                     sdMin = sd;
