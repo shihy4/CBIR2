@@ -1036,6 +1036,8 @@ public class CBIR extends JFrame {
             sdMin = Double.MAX_VALUE;
             Set<Integer> relevantSet = new HashSet<Integer>();
 
+            initializeWeight();
+            
             if(picNo > 0) {
                 // The query image should always be added
                 relevantSet.add(picNo);
@@ -1045,12 +1047,7 @@ public class CBIR extends JFrame {
                     if(checkBox[image].isSelected()) {
                         relevantSet.add(image);
                     }
-                }
-                // if size == 1 means only query image is checked
-                if(relevantSet.size() == 1) { 
-                    relevantSet.remove(picNo);
-                }
-                
+                }                
                 
                 // size = relevantSet.size + 2 for additional space for AVG/SD
                 subsetNormalizedMatrix = 
@@ -1079,6 +1076,15 @@ public class CBIR extends JFrame {
    
                 displayPage();
             }
+        }
+        
+        /**********************************************************************
+         * initializeWeight - Initializes weight to 1/N where N = 89
+         *********************************************************************/
+        private void initializeWeight() {
+        	for(int i =0; i < INT_CC_COLUMN_SIZE; i++) {
+        		weight[i] = 1 / INT_CC_COLUMN_SIZE;
+        	}
         }
         
         /**********************************************************************
@@ -1200,8 +1206,12 @@ public class CBIR extends JFrame {
                     sum_of_square += 
                             Math.pow((theMatrix[i][column] - avg), 2);
                 }
-                double sd = Math.sqrt(sum_of_square / (matrixSize - 1));
-
+                double sd = 0;
+                if(matrixSize > 1) {
+                	// if only itself, standard deviation should be 0
+                	sd = Math.sqrt(sum_of_square / (matrixSize - 1));
+                } 
+                
                 theMatrix[sd_row][column] = sd;
                 if(sd > 0 && sd < sdMin) {
                     sdMin = sd;
